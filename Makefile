@@ -1,4 +1,4 @@
-CFLAGS=-Wall -std=c99 -g -DNDEBUG
+CFLAGS=-Wall -std=gnu99 -g -DNDEBUG -pg
 
 all: test
 

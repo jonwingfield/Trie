@@ -7,6 +7,8 @@ typedef struct StringNode
 	struct StringNode* next;
 } StringNode_typ;
 
+#define iterate(R) for (; R; R = R->next) 
+
 void StringNode_free(StringNode_typ* nodes);
 
 typedef struct Trie
@@ -22,6 +24,9 @@ typedef struct Trie
 Trie_typ* Trie_init();
 void Trie_destroy(Trie_typ* trie);
 int Trie_add(Trie_typ* trie, char* item);
+void Trie_save(Trie_typ* trie, FILE* file); 
+Trie_typ* Trie_load(FILE* file);
 StringNode_typ* Trie_find(Trie_typ* trie, char* item);
 
 #endif
+

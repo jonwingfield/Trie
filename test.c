@@ -1,7 +1,8 @@
 #include <stdio.h>
+#include <string.h>
+#include <termio.h>
+#include <sys/ioctl.h>
 #include "trie.h"
-
-#define iterate(R) for (; R; R = R->next) 
 
 void find_and_print(Trie_typ* trie, char* to_find)
 {
@@ -17,16 +18,57 @@ void find_and_print(Trie_typ* trie, char* to_find)
 
 int main(int argc, char** argv)
 {
+	if (!strcmp(argv[1], "load")) {
+		FILE* file = fopen("trie-data", "r");
+		Trie_typ* loaded = Trie_load(file);
+
+		struct termios oldT, newT;
+		ioctl(0, TCGETS, &oldT);
+		newT = oldT;
+		newT.c_lflag &= ~(ECHO | ICANON);
+		ioctl(0, TCSETS, &newT);	
+
+		char word[1024];
+		int pos = 0;
+		while (1) {
+			char c;
+			read(0, &c, 1);
+			if (c == '/') {
+				pos = 0;
+				memset(word, 0, 1024);
+			} else {
+				word[pos++] = c;
+				word[pos] = '\0';
+				find_and_print(loaded, word);
+			}
+		}
+		return 0;
+	}	
+
 	Trie_typ* trie = Trie_init();
 
-	Trie_add(trie, "Hello");
-	Trie_add(trie, "Haven!");
-	Trie_add(trie, "Heaven");
-	Trie_add(trie, "Hemen");
+	char word[1024];
 
-	find_and_print(trie, "He");
+	while (fgets(word, 1024-1, stdin)) {
+		word[strlen(word)-1] = '\0';  // replace the newline
+		Trie_add(trie, word);
+	}
+
+	if (!strcmp(argv[1], "build")) {
+		FILE* stream = fopen("trie-data", "w");
+		if (stream) {
+			Trie_save(trie, stream);
+			fclose(stream);	
+		} else {
+			printf("Error occurred\n");
+		}	
+	}
+
+	find_and_print(trie, argv[1]);
 
 	Trie_destroy(trie);
+
+	trie = NULL;
 
 	return 0;
 }
