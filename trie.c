@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "trie.h"
 #include "dbg.h"
 
@@ -10,10 +11,9 @@
 // int g_node_pool_idx = 0;
 
 typedef struct Trie_data {
-    int size;
+    uint8_t size;
     char val;
-    int num_children;
-    int children_size;
+    uint8_t num_children;
 } Trie_data_typ;
 
 Trie_typ* Trie_init()
@@ -22,6 +22,7 @@ Trie_typ* Trie_init()
 
 	root->children_size = DEFAULT_CHILDREN;
 	root->children = calloc(DEFAULT_CHILDREN, sizeof(Trie_typ*));
+    root->string_value = NULL;
 
 	return root;
 }
@@ -108,12 +109,16 @@ void Get_node(Trie_typ* node, FILE* file)
     if (node->string_value) 
         size += strlen(node->string_value) + 1;
 
+    if (size > 255 || node->num_children > 255) {
+        printf("Error: children or size was too large.  Consider using larger types for storage");
+        exit(-1);
+    }
+
     char* data = malloc(size); 
     Trie_data_typ* trie_data = (Trie_data_typ*)data;
     trie_data->size = size;
     trie_data->val = node->val;
     trie_data->num_children = node->num_children;
-    trie_data->children_size = node->children_size;
     if (node->string_value) {
         strcpy(data + sizeof(Trie_data_typ), node->string_value);
         data[size-1] = '\0';
@@ -148,7 +153,8 @@ Trie_typ* Trie_load(FILE* file)
     Trie_typ* node = malloc(sizeof(Trie_typ));
     node->val = trie_data.val;
     node->num_children = trie_data.num_children;
-    node->children_size = trie_data.children_size;
+    node->children_size = ((int)trie_data.num_children) << 1;
+    node->string_value = NULL;
 
     debug("Loaded node for '%c'", node->val); 
 

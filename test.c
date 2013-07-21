@@ -9,8 +9,14 @@ void find_and_print(Trie_typ* trie, char* to_find)
 	StringNode_typ* results = Trie_find(trie, to_find);
 	StringNode_typ* iter = results;
 
+	int max = 10;
 	iterate(iter) {
-		if (iter->value) printf("%s\n", iter->value);
+		if (iter->value) {
+			printf("%s\n", iter->value);
+			if (--max < 0) {
+				break;
+			}
+		}
 	}
 
 	StringNode_free(results);
@@ -36,6 +42,10 @@ int main(int argc, char** argv)
 			if (c == '/') {
 				pos = 0;
 				memset(word, 0, 1024);
+			} else if (c == '?') {
+				Trie_destroy(loaded);
+				fclose(file);
+				return 0;
 			} else {
 				word[pos++] = c;
 				word[pos] = '\0';
